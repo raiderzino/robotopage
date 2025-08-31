@@ -13,7 +13,7 @@
     <button onclick="checkPackages()">Проверить доступные пакеты</button>
     <button onclick="exploreWebView()">Исследовать WebView</button>
     <button onclick="testPostMessage()">Тест postMessage</button>
-    <button onclick="testDialogs()">Тест диалогов</button>
+    <button onclick="testIBGManager()">Тест ibg_js_manager</button>
     <div id="output"></div>
     <h3>Запуск системных приложений через Intent</h3>
     <ul>
@@ -32,13 +32,11 @@
         <li><a href="dji://home">Открыть DJI Home (custom URI)</a></li>
         <li><a href="dji://support">Открыть DJI Support (custom URI)</a></li>
         <li><a href="djifly://settings">Открыть DJI Fly Settings (custom URI)</a></li>
+        <li><a href="djifly://openSettings">Открыть DJI Fly OpenSettings (custom URI)</a></li>
+        <li><a href="djifly://app">Открыть DJI Fly App (custom URI)</a></li>
         <li><a href="intent:#Intent;package=com.android.vending;action=android.intent.action.VIEW;end">Открыть Google Play</a></li>
         <li><a href="market://details?id=com.android.vending">Открыть Google Play через market</a></li>
         <li><a href="market://details?id=com.teslacoilsw.launcher">Установить Nova Launcher</a></li>
-        <li><a href="file:///system/etc">Проверить системные файлы (file://)</a></li>
-        <li><a href="file:///data/data/com.dji.go">Проверить данные DJI Go (file://)</a></li>
-        <li><a href="content://settings/system">Проверить настройки через Content Provider</a></li>
-        <li><a href="content://com.android.settings">Проверить настройки через альтернативный Content Provider</a></li>
     </ul>
 
     <script>
@@ -109,8 +107,7 @@
                 output.innerHTML += `<strong>Window Objects:</strong> ${Object.keys(window).join(', ')}<br>`;
                 output.innerHTML += `<strong>Navigator Objects:</strong> ${Object.keys(navigator).join(', ')}<br>`;
                 output.innerHTML += `<strong>IBG JS Manager:</strong> ${typeof window.ibg_js_manager !== 'undefined' ? JSON.stringify(window.ibg_js_manager) : 'Не найден'}<br>`;
-                output.innerHTML += `<br>Попробуйте открыть консоль (Ctrl+Shift+J) и выполните: <code>console.log(window)</code> или <code>console.log(navigator)</code> для дополнительной информации.<br>`;
-                output.innerHTML += 'Если есть доступ к файлам, попробуйте ссылки file:// или content:// ниже.';
+                output.innerHTML += `<br>Попробуйте открыть консоль (Ctrl+Shift+J) и выполните: <code>console.log(window.ibg_js_manager)</code> для дополнительной информации.<br>`;
             } catch (error) {
                 output.innerHTML += `Ошибка: ${error.message}<br>`;
             }
@@ -124,7 +121,11 @@
                     { action: 'openSettings' },
                     { action: 'openDJISettings' },
                     { action: 'launchApp', package: 'com.android.settings' },
-                    { action: 'launchApp', package: 'com.dji.go' }
+                    { action: 'launchApp', package: 'com.dji.go' },
+                    { action: 'open', uri: 'djifly://settings' },
+                    { action: 'navigate', uri: 'intent:#Intent;component=com.android.settings/.DevelopmentSettings;end' },
+                    { ibg_js_manager: 'openSettings' },
+                    { ibg_js_manager: 'launchApp', package: 'com.android.settings' }
                 ];
                 messages.forEach(msg => {
                     window.postMessage(JSON.stringify(msg), '*');
@@ -136,16 +137,38 @@
             }
         }
 
-        function testDialogs() {
+        function testIBGManager() {
             const output = document.getElementById('output');
-            output.innerHTML = 'Тест диалогов...<br>';
+            output.innerHTML = 'Тест ibg_js_manager...<br>';
             try {
-                alert('Тест alert. Нажмите OK и проверьте реакцию UI.');
-                const result = prompt('Тест prompt. Введите что-нибудь:', 'test');
-                output.innerHTML += `Prompt результат: ${result || 'Не введено'}<br>`;
-                const confirmed = confirm('Тест confirm. Нажмите OK или Cancel.');
-                output.innerHTML += `Confirm результат: ${confirmed}<br>`;
-                output.innerHTML += '<br>Если диалоги отображаются, это может повлиять на UI DJI Fly. Попробуйте несколько раз.';
+                if (typeof window.ibg_js_manager !== 'undefined') {
+                    output.innerHTML += `ibg_js_manager найден: ${JSON.stringify(window.ibg_js_manager)}<br>`;
+                    const methods = Object.keys(window.ibg_js_manager);
+                    output.innerHTML += `Методы ibg_js_manager: ${methods.join(', ') || 'Нет методов'}<br>`;
+                    const testMethods = ['openSettings', 'launchApp', 'startActivity', 'open', 'navigate', 'openDJISettings'];
+                    testMethods.forEach(method => {
+                        if (typeof window.ibg_js_manager[method] === 'function') {
+                            try {
+                                const args = ['com.android.settings', 'intent:#Intent;component=com.android.settings/.DevelopmentSettings;end', 'com.dji.go'];
+                                args.forEach(arg => {
+                                    try {
+                                        const result = window.ibg_js_manager[method](arg);
+                                        output.innerHTML += `Вызван ${method}('${arg}'): ${JSON.stringify(result)}<br>`;
+                                    } catch (e) {
+                                        output.innerHTML += `Ошибка при вызове ${method}('${arg}'): ${e.message}<br>`;
+                                    }
+                                });
+                            } catch (e) {
+                                output.innerHTML += `Ошибка при вызове ${method}: ${e.message}<br>`;
+                            }
+                        } else {
+                            output.innerHTML += `${method} не найден в ibg_js_manager.<br>`;
+                        }
+                    });
+                } else {
+                    output.innerHTML += 'ibg_js_manager не найден.<br>';
+                }
+                output.innerHTML += '<br>Откройте консоль (Ctrl+Shift+J) и выполните: <code>console.log(window.ibg_js_manager)</code> для деталей.';
             } catch (error) {
                 output.innerHTML += `Ошибка: ${error.message}<br>`;
             }
