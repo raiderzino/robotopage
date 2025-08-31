@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Песочница</title>
+</head>
+<body>
+    <a href="http://192.168.1.102">click</a>
+    <textarea id="codeInput" rows="10" cols="50" placeholder="Введите ваш JavaScript код..."></textarea>
+    <br>
+    <button onclick="runCode()">Выполнить</button>
+    <div id="output"></div>
+
+    <script>
+        function runCode() {
+            const code = document.getElementById('codeInput').value;
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+
+            try {
+                const result = new Function(code)();
+                if (result !== undefined) {
+                    output.innerHTML = String(result);
+                }
+            } catch (error) {
+                output.innerHTML = 'Ошибка: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
