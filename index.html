@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>JavaScript Песочница</title>
 </head>
 <body>
@@ -14,6 +17,7 @@
     <button onclick="exploreWebView()">Исследовать WebView</button>
     <button onclick="testPostMessage()">Тест postMessage</button>
     <button onclick="testIBGManager()">Тест ibg_js_manager</button>
+    <button onclick="clearCacheAndReload()">Перезагрузить с очисткой кэша</button>
     <div id="output"></div>
     <h3>Запуск системных приложений через Intent</h3>
     <ul>
@@ -124,8 +128,8 @@
                     { action: 'launchApp', package: 'com.dji.go' },
                     { action: 'open', uri: 'djifly://settings' },
                     { action: 'navigate', uri: 'intent:#Intent;component=com.android.settings/.DevelopmentSettings;end' },
-                    { ibg_js_manager: 'openSettings' },
-                    { ibg_js_manager: 'launchApp', package: 'com.android.settings' }
+                    { ibg_js_manager: 'openInBrowser', uri: 'market://details?id=com.android.vending' },
+                    { ibg_js_manager: 'user_login' }
                 ];
                 messages.forEach(msg => {
                     window.postMessage(JSON.stringify(msg), '*');
@@ -145,11 +149,16 @@
                     output.innerHTML += `ibg_js_manager найден: ${JSON.stringify(window.ibg_js_manager)}<br>`;
                     const methods = Object.keys(window.ibg_js_manager);
                     output.innerHTML += `Методы ibg_js_manager: ${methods.join(', ') || 'Нет методов'}<br>`;
-                    const testMethods = ['openSettings', 'launchApp', 'startActivity', 'open', 'navigate', 'openDJISettings'];
+                    const testMethods = ['app_upload_photo', 'getCraftSn', 'getGimbalSn', 'onC1RequestFinish', 'onCareCheckoutFinish', 'onGetProductInfo', 'openInBrowser', 'user_login', 'user_logout'];
                     testMethods.forEach(method => {
                         if (typeof window.ibg_js_manager[method] === 'function') {
                             try {
-                                const args = ['com.android.settings', 'intent:#Intent;component=com.android.settings/.DevelopmentSettings;end', 'com.dji.go'];
+                                const args = method === 'openInBrowser' ? [
+                                    'https://www.google.com',
+                                    'market://details?id=com.teslacoilsw.launcher',
+                                    'intent:#Intent;component=com.android.settings/.DevelopmentSettings;end',
+                                    'djifly://settings'
+                                ] : ['test', '', 'com.android.settings'];
                                 args.forEach(arg => {
                                     try {
                                         const result = window.ibg_js_manager[method](arg);
@@ -162,13 +171,28 @@
                                 output.innerHTML += `Ошибка при вызове ${method}: ${e.message}<br>`;
                             }
                         } else {
-                            output.innerHTML += `${method} не найден в ibg_js_manager.<br>`;
+                            output.innerHTML += `${method} не является функцией в ibg_js_manager.<br>`;
                         }
                     });
                 } else {
                     output.innerHTML += 'ibg_js_manager не найден.<br>';
                 }
                 output.innerHTML += '<br>Откройте консоль (Ctrl+Shift+J) и выполните: <code>console.log(window.ibg_js_manager)</code> для деталей.';
+            } catch (error) {
+                output.innerHTML += `Ошибка: ${error.message}<br>`;
+            }
+        }
+
+        function clearCacheAndReload() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Перезагрузка с очисткой кэша...<br>';
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload(true);
+                const timestamp = new Date().getTime();
+                window.location.href = window.location.href.split('?')[0] + `?nocache=${timestamp}`;
+                output.innerHTML += 'Перезагрузка выполнена. Если страница не обновилась, WebView может блокировать reload.';
             } catch (error) {
                 output.innerHTML += `Ошибка: ${error.message}<br>`;
             }
