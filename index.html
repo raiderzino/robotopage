@@ -6,10 +6,10 @@
     <title>JavaScript Песочница</title>
 </head>
 <body>
-    <a href="http://192.168.1.102">click</a>
     <textarea id="codeInput" rows="10" cols="50" placeholder="Введите ваш JavaScript код..."></textarea>
     <br>
     <button onclick="runCode()">Выполнить</button>
+    <button onclick="showSystemInfo()">Показать информацию о системе</button>
     <div id="output"></div>
 
     <script>
@@ -26,6 +26,24 @@
             } catch (error) {
                 output.innerHTML = 'Ошибка: ' + error.message;
             }
+        }
+
+        function showSystemInfo() {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+
+            const systemInfo = `
+                <strong>Информация о системе:</strong><br>
+                Платформа: ${navigator.platform}<br>
+                Операционная система: ${navigator.oscpu || 'Недоступно'}<br>
+                Браузер: ${navigator.userAgent}<br>
+                Язык браузера: ${navigator.language}<br>
+                Разрешение экрана: ${window.screen.width}x${window.screen.height}<br>
+                Цветовая глубина: ${window.screen.colorDepth} бит<br>
+                Часовой пояс: ${Intl.DateTimeFormat().resolvedOptions().timeZone}<br>
+                Дата и время: ${new Date().toLocaleString()}
+            `;
+            output.innerHTML = systemInfo;
         }
     </script>
 </body>
