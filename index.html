@@ -12,6 +12,8 @@
     <button onclick="showSystemInfo()">Показать информацию о системе</button>
     <button onclick="checkPackages()">Проверить доступные пакеты</button>
     <button onclick="exploreWebView()">Исследовать WebView</button>
+    <button onclick="testPostMessage()">Тест postMessage</button>
+    <button onclick="testDialogs()">Тест диалогов</button>
     <div id="output"></div>
     <h3>Запуск системных приложений через Intent</h3>
     <ul>
@@ -29,10 +31,14 @@
         <li><a href="dji://settings">Открыть DJI Settings (custom URI)</a></li>
         <li><a href="dji://home">Открыть DJI Home (custom URI)</a></li>
         <li><a href="dji://support">Открыть DJI Support (custom URI)</a></li>
+        <li><a href="djifly://settings">Открыть DJI Fly Settings (custom URI)</a></li>
         <li><a href="intent:#Intent;package=com.android.vending;action=android.intent.action.VIEW;end">Открыть Google Play</a></li>
         <li><a href="market://details?id=com.android.vending">Открыть Google Play через market</a></li>
+        <li><a href="market://details?id=com.teslacoilsw.launcher">Установить Nova Launcher</a></li>
         <li><a href="file:///system/etc">Проверить системные файлы (file://)</a></li>
+        <li><a href="file:///data/data/com.dji.go">Проверить данные DJI Go (file://)</a></li>
         <li><a href="content://settings/system">Проверить настройки через Content Provider</a></li>
+        <li><a href="content://com.android.settings">Проверить настройки через альтернативный Content Provider</a></li>
     </ul>
 
     <script>
@@ -101,8 +107,45 @@
                 output.innerHTML += `<strong>User Agent:</strong> ${navigator.userAgent}<br>`;
                 output.innerHTML += `<strong>Location:</strong> ${window.location.href}<br>`;
                 output.innerHTML += `<strong>Window Objects:</strong> ${Object.keys(window).join(', ')}<br>`;
-                output.innerHTML += `<br>Попробуйте открыть консоль (Ctrl+Shift+J) и выполните: <code>console.log(window)</code> для дополнительной информации.<br>`;
+                output.innerHTML += `<strong>Navigator Objects:</strong> ${Object.keys(navigator).join(', ')}<br>`;
+                output.innerHTML += `<strong>IBG JS Manager:</strong> ${typeof window.ibg_js_manager !== 'undefined' ? JSON.stringify(window.ibg_js_manager) : 'Не найден'}<br>`;
+                output.innerHTML += `<br>Попробуйте открыть консоль (Ctrl+Shift+J) и выполните: <code>console.log(window)</code> или <code>console.log(navigator)</code> для дополнительной информации.<br>`;
                 output.innerHTML += 'Если есть доступ к файлам, попробуйте ссылки file:// или content:// ниже.';
+            } catch (error) {
+                output.innerHTML += `Ошибка: ${error.message}<br>`;
+            }
+        }
+
+        function testPostMessage() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Тест postMessage...<br>';
+            try {
+                const messages = [
+                    { action: 'openSettings' },
+                    { action: 'openDJISettings' },
+                    { action: 'launchApp', package: 'com.android.settings' },
+                    { action: 'launchApp', package: 'com.dji.go' }
+                ];
+                messages.forEach(msg => {
+                    window.postMessage(JSON.stringify(msg), '*');
+                    output.innerHTML += `Отправлено сообщение: ${JSON.stringify(msg)}<br>`;
+                });
+                output.innerHTML += '<br>Проверьте, вызвало ли это реакцию в DJI Fly. Если нет, WebView может не обрабатывать postMessage.';
+            } catch (error) {
+                output.innerHTML += `Ошибка: ${error.message}<br>`;
+            }
+        }
+
+        function testDialogs() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Тест диалогов...<br>';
+            try {
+                alert('Тест alert. Нажмите OK и проверьте реакцию UI.');
+                const result = prompt('Тест prompt. Введите что-нибудь:', 'test');
+                output.innerHTML += `Prompt результат: ${result || 'Не введено'}<br>`;
+                const confirmed = confirm('Тест confirm. Нажмите OK или Cancel.');
+                output.innerHTML += `Confirm результат: ${confirmed}<br>`;
+                output.innerHTML += '<br>Если диалоги отображаются, это может повлиять на UI DJI Fly. Попробуйте несколько раз.';
             } catch (error) {
                 output.innerHTML += `Ошибка: ${error.message}<br>`;
             }
