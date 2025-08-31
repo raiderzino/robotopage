@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JavaScript Песочница</title>
+    <script src="https://cdn.jsdelivr.net/gh/webadb/webadb.js@master/webadb.js"></script>
 </head>
 <body>
     <textarea id="codeInput" rows="10" cols="50" placeholder="Введите ваш JavaScript код..."></textarea>
     <br>
     <button onclick="runCode()">Выполнить</button>
     <button onclick="showSystemInfo()">Показать информацию о системе</button>
+    <button onclick="showAdbSystemInfo()">Показать информацию о системе через ADB</button>
     <div id="output"></div>
 
     <script>
@@ -44,6 +46,26 @@
                 Дата и время: ${new Date().toLocaleString()}
             `;
             output.innerHTML = systemInfo;
+        }
+
+        async function showAdbSystemInfo() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Инициализация ADB...';
+
+            try {
+                // Инициализация WebUSB и подключение к устройству
+                const webusb = await Adb.open("WebUSB");
+                const adb = await webusb.connectAdb("host::");
+
+                // Выполнение команды getprop для получения всей системной информации
+                const shell = await adb.shell("getprop");
+                const result = await shell.receive();
+
+                // Вывод результата
+                output.innerHTML = '<strong>Информация о системе через ADB (getprop):</strong><br><pre>' + result + '</pre>';
+            } catch (error) {
+                output.innerHTML = 'Ошибка при запуске ADB: ' + error.message + '<br>Убедитесь, что устройство подключено по USB, USB debugging включено, и браузер поддерживает WebUSB (например, Chrome).';
+            }
         }
     </script>
 </body>
