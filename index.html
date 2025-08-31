@@ -10,6 +10,8 @@
     <br>
     <button onclick="runCode()">Выполнить</button>
     <button onclick="showSystemInfo()">Показать информацию о системе</button>
+    <button onclick="checkPackages()">Проверить доступные пакеты</button>
+    <button onclick="exploreWebView()">Исследовать WebView</button>
     <div id="output"></div>
     <h3>Запуск системных приложений через Intent</h3>
     <ul>
@@ -18,10 +20,19 @@
         <li><a href="intent:#Intent;component=com.android.settings/.Settings;end">Открыть системные настройки</a></li>
         <li><a href="intent:#Intent;component=com.android.settings/.DeviceInfoSettings;end">Открыть информацию об устройстве</a></li>
         <li><a href="intent:#Intent;package=com.dji.go;action=android.intent.action.MAIN;end">Открыть приложение DJI Go</a></li>
+        <li><a href="intent:#Intent;package=com.dji.go.v4;action=android.intent.action.MAIN;end">Открыть приложение DJI Go 4</a></li>
         <li><a href="intent:#Intent;package=com.dji.rc;action=android.intent.action.MAIN;end">Открыть приложение DJI RC</a></li>
+        <li><a href="intent:#Intent;package=com.dji.settings;action=android.intent.action.MAIN;end">Открыть DJI Settings</a></li>
         <li><a href="intent:#Intent;component=com.android.packageinstaller/.PackageInstallerActivity;end">Открыть установщик пакетов</a></li>
         <li><a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end">Запустить системный лаунчер</a></li>
         <li><a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.PREFERENCE;end">Открыть все настройки</a></li>
+        <li><a href="dji://settings">Открыть DJI Settings (custom URI)</a></li>
+        <li><a href="dji://home">Открыть DJI Home (custom URI)</a></li>
+        <li><a href="dji://support">Открыть DJI Support (custom URI)</a></li>
+        <li><a href="intent:#Intent;package=com.android.vending;action=android.intent.action.VIEW;end">Открыть Google Play</a></li>
+        <li><a href="market://details?id=com.android.vending">Открыть Google Play через market</a></li>
+        <li><a href="file:///system/etc">Проверить системные файлы (file://)</a></li>
+        <li><a href="content://settings/system">Проверить настройки через Content Provider</a></li>
     </ul>
 
     <script>
@@ -53,6 +64,48 @@
                 Часовой пояс: ${Intl.DateTimeFormat().resolvedOptions().timeZone}<br>
                 Дата и время: ${new Date().toLocaleString()}
             `;
+        }
+
+        function checkPackages() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Попытка проверить доступные пакеты...';
+            const packages = [
+                'com.android.settings',
+                'com.dji.go',
+                'com.dji.go.v4',
+                'com.dji.rc',
+                'com.dji.settings',
+                'com.android.packageinstaller',
+                'com.android.systemui',
+                'com.android.vending'
+            ];
+            output.innerHTML += '<br><strong>Результаты проверки:</strong><br>';
+            packages.forEach(pkg => {
+                try {
+                    const intent = `intent:#Intent;package=${pkg};action=android.intent.action.MAIN;end`;
+                    const a = document.createElement('a');
+                    a.href = intent;
+                    a.click();
+                    output.innerHTML += `${pkg}: Intent отправлен (проверьте, открылось ли приложение)<br>`;
+                } catch (error) {
+                    output.innerHTML += `${pkg}: Ошибка - ${error.message}<br>`;
+                }
+            });
+            output.innerHTML += '<br>Если ничего не открылось, DJI лаунчер блокирует Intent. Попробуйте ссылки ниже или подключение через ПК.';
+        }
+
+        function exploreWebView() {
+            const output = document.getElementById('output');
+            output.innerHTML = 'Исследование WebView...<br>';
+            try {
+                output.innerHTML += `<strong>User Agent:</strong> ${navigator.userAgent}<br>`;
+                output.innerHTML += `<strong>Location:</strong> ${window.location.href}<br>`;
+                output.innerHTML += `<strong>Window Objects:</strong> ${Object.keys(window).join(', ')}<br>`;
+                output.innerHTML += `<br>Попробуйте открыть консоль (Ctrl+Shift+J) и выполните: <code>console.log(window)</code> для дополнительной информации.<br>`;
+                output.innerHTML += 'Если есть доступ к файлам, попробуйте ссылки file:// или content:// ниже.';
+            } catch (error) {
+                output.innerHTML += `Ошибка: ${error.message}<br>`;
+            }
         }
     </script>
 </body>
