@@ -4,16 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JavaScript Песочница</title>
-    <script src="https://cdn.jsdelivr.net/gh/webadb/webadb.js@master/webadb.js"></script>
 </head>
 <body>
     <textarea id="codeInput" rows="10" cols="50" placeholder="Введите ваш JavaScript код..."></textarea>
     <br>
     <button onclick="runCode()">Выполнить</button>
     <button onclick="showSystemInfo()">Показать информацию о системе</button>
-    <button onclick="showAdbSystemInfo()">Показать информацию о системе через ADB</button>
-    <a href="intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end">intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end</a>
     <div id="output"></div>
+    <h3>Запуск системных приложений через Intent</h3>
+    <ul>
+        <li><a href="intent:#Intent;component=com.android.settings/.DevelopmentSettings;end">Открыть настройки разработчика</a></li>
+        <li><a href="intent:#Intent;component=com.android.settings/.wifi.WifiSettings;end">Открыть настройки Wi-Fi</a></li>
+        <li><a href="intent:#Intent;component=com.android.settings/.Settings;end">Открыть системные настройки</a></li>
+        <li><a href="intent:#Intent;component=com.android.settings/.DeviceInfoSettings;end">Открыть информацию об устройстве</a></li>
+        <li><a href="intent:#Intent;package=com.dji.go;action=android.intent.action.MAIN;end">Открыть приложение DJI Go</a></li>
+        <li><a href="intent:#Intent;package=com.dji.rc;action=android.intent.action.MAIN;end">Открыть приложение DJI RC</a></li>
+        <li><a href="intent:#Intent;component=com.android.packageinstaller/.PackageInstallerActivity;end">Открыть установщик пакетов</a></li>
+        <li><a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end">Запустить системный лаунчер</a></li>
+        <li><a href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.PREFERENCE;end">Открыть все настройки</a></li>
+    </ul>
 
     <script>
         function runCode() {
@@ -33,9 +42,7 @@
 
         function showSystemInfo() {
             const output = document.getElementById('output');
-            output.innerHTML = '';
-
-            const systemInfo = `
+            output.innerHTML = `
                 <strong>Информация о системе:</strong><br>
                 Платформа: ${navigator.platform}<br>
                 Операционная система: ${navigator.oscpu || 'Недоступно'}<br>
@@ -46,27 +53,6 @@
                 Часовой пояс: ${Intl.DateTimeFormat().resolvedOptions().timeZone}<br>
                 Дата и время: ${new Date().toLocaleString()}
             `;
-            output.innerHTML = systemInfo;
-        }
-
-        async function showAdbSystemInfo() {
-            const output = document.getElementById('output');
-            output.innerHTML = 'Инициализация ADB...';
-
-            try {
-                // Инициализация WebUSB и подключение к устройству
-                const webusb = await Adb.open("WebUSB");
-                const adb = await webusb.connectAdb("host::");
-
-                // Выполнение команды getprop для получения всей системной информации
-                const shell = await adb.shell("getprop");
-                const result = await shell.receive();
-
-                // Вывод результата
-                output.innerHTML = '<strong>Информация о системе через ADB (getprop):</strong><br><pre>' + result + '</pre>';
-            } catch (error) {
-                output.innerHTML = 'Ошибка при запуске ADB: ' + error.message + '<br>Убедитесь, что устройство подключено по USB, USB debugging включено, и браузер поддерживает WebUSB (например, Chrome).';
-            }
         }
     </script>
 </body>
